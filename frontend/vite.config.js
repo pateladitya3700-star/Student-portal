@@ -4,10 +4,14 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173
-    // Proxy removed - use environment variables instead
-    // For local development, set VITE_API_URL=http://localhost:5000/api in .env
-    // For production, set VITE_API_URL=https://your-backend.onrender.com/api
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'https://student-portal-dbmc.onrender.com',
+        changeOrigin: true,
+        secure: true
+      }
+    }
   },
   // Make sure environment variables are exposed to the client
   define: {
