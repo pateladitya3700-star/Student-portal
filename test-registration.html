@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Registration API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1e40af;
+        }
+        .result {
+            background: white;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            border-left: 4px solid #10b981;
+        }
+        .error {
+            border-left: 4px solid #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <h1>Registration API Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Register Student</h2>
+        <button onclick="testStudentRegistration()">Test Student Registration</button>
+        <div id="student-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Register Faculty</h2>
+        <button onclick="testFacultyRegistration()">Test Faculty Registration</button>
+        <div id="faculty-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Check Backend Health</h2>
+        <button onclick="checkHealth()">Check Backend</button>
+        <div id="health-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        async function testStudentRegistration() {
+            const resultDiv = document.getElementById('student-result');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: `test.student.${Date.now()}@example.com`,
+                        password: 'test123',
+                        role: 'student',
+                        profileData: {
+                            firstName: 'Test',
+                            lastName: 'Student',
+                            phone: '9841234567',
+                            address: 'Test Address',
+                            studentId: `STU${Date.now()}`,
+                            program: 'BCA',
+                            semester: 1,
+                            enrollmentDate: '2024-01-15'
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = 'SUCCESS!\n\n' + JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = 'ERROR!\n\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'NETWORK ERROR!\n\n' + error.message;
+            }
+        }
+
+        async function testFacultyRegistration() {
+            const resultDiv = document.getElementById('faculty-result');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: `test.faculty.${Date.now()}@example.com`,
+                        password: 'test123',
+                        role: 'faculty',
+                        profileData: {
+                            firstName: 'Test',
+                            lastName: 'Faculty',
+                            phone: '9851234567',
+                            address: 'Test Address',
+                            facultyId: `FAC${Date.now()}`,
+                            department: 'Computer Science',
+                            specialization: 'Testing'
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = 'SUCCESS!\n\n' + JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = 'ERROR!\n\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'NETWORK ERROR!\n\n' + error.message;
+            }
+        }
+
+        async function checkHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.textContent = 'Checking...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch('http://localhost:5000/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = 'Backend is running!\n\n' + JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = 'Backend error!\n\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Cannot connect to backend!\n\nMake sure backend is running on http://localhost:5000\n\nError: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

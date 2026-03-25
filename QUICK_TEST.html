@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Quick Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 20px;
+      background: #f8fafc;
+    }
+    .test-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    button {
+      background: #14B8A6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #0F766E;
+    }
+    .result {
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .success { color: #10B981; font-weight: bold; }
+    .error { color: #EF4444; font-weight: bold; }
+    .warning { color: #F59E0B; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Dashboard Quick Test</h1>
+  <p>This page will help diagnose why the dashboard isn't showing content.</p>
+
+  <div class="test-card">
+    <h2>Test 1: Check Authentication</h2>
+    <button onclick="checkAuth()">Run Test</button>
+    <div id="auth-result" class="result"></div>
+  </div>
+
+  <div class="test-card">
+    <h2>Test 2: Check Backend Connection</h2>
+    <button onclick="checkBackend()">Run Test</button>
+    <div id="backend-result" class="result"></div>
+  </div>
+
+  <div class="test-card">
+    <h2>Test 3: Check API Endpoints</h2>
+    <button onclick="checkAPI()">Run Test</button>
+    <div id="api-result" class="result"></div>
+  </div>
+
+  <div class="test-card">
+    <h2>Test 4: Check Frontend App</h2>
+    <button onclick="checkFrontend()">Run Test</button>
+    <div id="frontend-result" class="result"></div>
+  </div>
+
+  <div class="test-card">
+    <h2>Quick Fix: Clear Cache & Reload</h2>
+    <button onclick="clearAndReload()">Clear Cache & Reload Dashboard</button>
+    <p style="color: #64748b; font-size: 14px;">This will clear your browser cache and reload the admin dashboard.</p>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:5000';
+
+    function checkAuth() {
+      const result = document.getElementById('auth-result');
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      
+      let output = '=== AUTHENTICATION CHECK ===\n\n';
+      
+      if (token) {
+        output += '✅ Token: <span class="success">EXISTS</span>\n';
+        output += `Token: ${token.substring(0, 20)}...\n\n`;
+      } else {
+        output += '❌ Token: <span class="error">MISSING</span>\n';
+        output += 'You need to login first!\n\n';
+      }
+      
+      if (user) {
+        output += '✅ User Data: <span class="success">EXISTS</span>\n';
+        try {
+          const userData = JSON.parse(user);
+          output += `Role: ${userData.role}\n`;
+          output += `Email: ${userData.email}\n`;
+          output += `ID: ${userData.id}\n\n`;
+          
+          if (userData.role !== 'admin') {
+            output += '⚠️ <span class="warning">WARNING: You are not logged in as admin!</span>\n';
+            output += 'The admin dashboard requires admin role.\n';
+          }
+        } catch (e) {
+          output += '❌ <span class="error">User data is corrupted</span>\n';
+        }
+      } else {
+        output += '❌ User Data: <span class="error">MISSING</span>\n';
+      }
+      
+      result.innerHTML = output;
+    }
+
+    async function checkBackend() {
+      const result = document.getElementById('backend-result');
+      result.innerHTML = 'Testing backend connection...\n';
+      
+      try {
+        const response = await fetch(`${API_URL}/api/health`);
+        if (response.ok) {
+          result.innerHTML = '✅ <span class="success">Backend is running!</span>\n';
+          result.innerHTML += `Status: ${response.status} ${response.statusText}\n`;
+        } else {
+          result.innerHTML = '⚠️ <span class="warning">Backend responded but with error</span>\n';
+          result.innerHTML += `Status: ${response.status} ${response.statusText}\n`;
+        }
+      } catch (error) {
+        result.innerHTML = '❌ <span class="error">Cannot connect to backend!</span>\n';
+        result.innerHTML += `Error: ${error.message}\n\n`;
+        result.innerHTML += 'Make sure backend is running:\n';
+        result.innerHTML += 'cd backend\n';
+        result.innerHTML += 'node server.js\n';
+      }
+    }
+
+    async function checkAPI() {
+      const result = document.getElementById('api-result');
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        result.innerHTML = '❌ <span class="error">No token found!</span>\nPlease login first.';
+        return;
+      }
+      
+      result.innerHTML = 'Testing API endpoints...\n\n';
+      
+      const endpoints = [
+        '/api/admin/stats',
+        '/api/admin/users',
+        '/api/admin/students',
+        '/api/admin/courses'
+      ];
+      
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(`${API_URL}${endpoint}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            result.innerHTML += `✅ ${endpoint}: <span class="success">OK</span>\n`;
+            result.innerHTML += `   Data: ${JSON.stringify(data).substring(0, 100)}...\n\n`;
+          } else {
+            result.innerHTML += `❌ ${endpoint}: <span class="error">${response.status}</span>\n`;
+            const text = await response.text();
+            result.innerHTML += `   Error: ${text.substring(0, 100)}\n\n`;
+          }
+        } catch (error) {
+          result.innerHTML += `❌ ${endpoint}: <span class="error">FAILED</span>\n`;
+          result.innerHTML += `   Error: ${error.message}\n\n`;
+        }
+      }
+    }
+
+    async function checkFrontend() {
+      const result = document.getElementById('frontend-result');
+      result.innerHTML = 'Checking frontend status...\n\n';
+      
+      try {
+        const response = await fetch('http://localhost:5173');
+        if (response.ok) {
+          result.innerHTML += '✅ <span class="success">Frontend is running!</span>\n';
+          result.innerHTML += 'URL: http://localhost:5173\n\n';
+          result.innerHTML += 'If you can\'t see the dashboard:\n';
+          result.innerHTML += '1. Press Ctrl+Shift+R to hard refresh\n';
+          result.innerHTML += '2. Clear browser cache\n';
+          result.innerHTML += '3. Try incognito/private mode\n';
+        } else {
+          result.innerHTML += '⚠️ <span class="warning">Frontend responded with error</span>\n';
+        }
+      } catch (error) {
+        result.innerHTML += '❌ <span class="error">Frontend not running!</span>\n\n';
+        result.innerHTML += 'Start the frontend:\n';
+        result.innerHTML += 'cd frontend\n';
+        result.innerHTML += 'npm run dev\n';
+      }
+    }
+
+    function clearAndReload() {
+      if (confirm('This will clear your browser cache and reload the dashboard. Continue?')) {
+        // Clear service workers
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(registration => registration.unregister());
+          });
+        }
+        
+        // Clear cache storage
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => caches.delete(name));
+          });
+        }
+        
+        // Redirect to dashboard with cache-busting
+        window.location.href = 'http://localhost:5173/dashboard?nocache=' + Date.now();
+      }
+    }
+
+    // Auto-run first test
+    window.onload = () => {
+      checkAuth();
+    };
+  </script>
+</body>
+</html>
